@@ -14,10 +14,10 @@ void Fim(){
 		final = final + 1;
 	}
 	else{
-        printf("Erro: token nao encontrado");
+        printf("Erro: token nao encontrado\n");
 	}
     }while(final != 1);
-    printf("Aceito");
+    printf("Aceito\n");
 	}
 	
 

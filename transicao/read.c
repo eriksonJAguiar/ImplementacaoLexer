@@ -23,11 +23,11 @@ void Read(){
         estado = estado + 1;
 	}
 	else{
-        printf("Erro: token nao encontrado");
+        printf("Erro: token nao encontrado\n");
         break;
 	}
     }
-    printf("Aceito");
+    printf("Aceito\n");
 	}
 	
 

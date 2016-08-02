@@ -27,10 +27,11 @@ void Atrib(){
 		final = final + 2;
 	}
 	else if(estado == 4){
-        printf("Erro: token nao encontrado");
+        printf("Aceito\n");
+        break
 	}
 	else{
-        printf("Erro: token nao encontrado");
+        printf("Erro: token nao encontrado\n");
 	}
     }
 	}

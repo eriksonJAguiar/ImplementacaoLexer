@@ -23,10 +23,10 @@ void White(){
         estado = estado + 1;
 	}
 	else{
-        printf("Erro: token nao encontrado");
+        printf("Erro: token nao encontrado\n");
 	}
     }while(final != 4);
-    printf("Aceito");
+    printf("Aceito\n");
 	}
 	
 
