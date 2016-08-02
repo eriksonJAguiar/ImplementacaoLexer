@@ -8,7 +8,7 @@ void Soma(){
 	int final = 0;
 	
 	do{
-	scanf("%c",entrada);
+	scanf("%c",&entrada);
 	
 	if(entrada == '+' && estado == 0){
 		final = final + 1;
