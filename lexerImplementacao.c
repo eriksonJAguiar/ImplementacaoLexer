@@ -1,76 +1,55 @@
 #include <stdio.h>
 #include "tokens.h"
 #include <string.h>
+#include <pthread.h>
+#include <semaphore.h>
 #include <stdlib.h>
 #include "lista.h"
 #include <ctype.h>
+#include "read.h"
 
 
-int dt1(char lexema[]);
-int dt2(char lexema[]);
+typedef struct tabela_simb{
+  int id;
+  char *lexema;
+  int token;
+}tabela_simb;
+
+char caracter;
 
 int main(){
 
-    char lexema[4096];
+struct tabela_simb tabela[20];
 
-    char caracter;
-    int i = 0;
-    do{
-      caracter = getchar();
-      lexema[i] = caracter;
-      i++;
-    }while (caracter != '\n');
-    lexema[i - 1] = '\0';
+tabela[0].id = 1;
+tabela[0].lexema = (char*)malloc(sizeof(char));
+tabela[0].lexema = "inteiro";
+tabela[0].token = INTEIRO;
 
-    int dt = dt2(lexema);
+buffer1.prox = NULL;
+buffer2.prox = NULL;
 
-    if(dt == 2){
-      printf("Var\n");
-    }
-    else{
-      printf("ERRO\n");
-    }
+pthread_t cons, prod;
+
+sem_init(&mutex, 0, 1);
+
+while (terminou != 1) {
+
+	pthread_create(&cons, NULL, readFile, NULL);
+	pthread_create(&prod, NULL, consomeBuffer, NULL);
+
+  pthread_join(cons, NULL);
+	pthread_join(prod, NULL);
+
+  int foundToken = 0;
+
+  caracter = escandimento(&buffer2,foundToken);
+  //char c = escandimento(&buffer2,foundToken);
+  printf("%c\n",caracter);
+  //printf("%c\n",c);
+}
+
+
 
     return 0;
-}
-int dt1(char lexema[]){
-
-  if(lexema[0] != 'i')
-      return 0;
-  if(lexema[1] != 'n')
-      return 0;
-  if(lexema[2] != 't')
-      return 0;
-  if(lexema[3] != 'e')
-      return 0;
-  if(lexema[4] != 'i')
-      return 0;
-  if(lexema[5] != 'r')
-      return 0;
-  if(lexema[6] != 'o')
-      return 0;
-
-  return INTEIRO;
-
-}
-int dt2(char lexema[]){
-
-  if(!isalpha(lexema[0]))
-    return 0;
-    int i = 1;
-  while((isalpha(lexema[i+1]) || isdigit(lexema[i+1])) && lexema[i+1] != '_'){
-    if(lexema[i+1] == '\0')
-        return VAR;
-      i++;
-  }
-  if(lexema[i+1] != '_')
-      return 0;
-
-      while((isalpha(lexema[i+1]) || isdigit(lexema[i+1])) && lexema[i+1] != '_'){
-        if(lexema[i+1] == '\0')
-            return VAR;
-          i++;
-      }
-
-  return VAR;
 }
