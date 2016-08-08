@@ -1,0 +1,28 @@
+# depslib dependency file v1.0
+1470280301 source:/home/erikson/MyLex/buffer1.c
+	"buffer1.h"
+
+1470280223 /home/erikson/MyLex/buffer1.h
+	<stdlib.h>
+	<stdio.h>
+
+1470280315 source:/home/erikson/MyLex/buffer2.c
+	"buffer2.h"
+
+1470280239 /home/erikson/MyLex/buffer2.h
+	<stdlib.h>
+	<stdio.h>
+
+1470280544 source:/home/erikson/MyLex/main.c
+	<stdio.h>
+	"tokens.h"
+	<string.h>
+	<pthread.h>
+	<semaphore.h>
+	<stdlib.h>
+	<ctype.h>
+	"buffer1.h"
+	"buffer2.h"
+
+1470280409 /home/erikson/MyLex/tokens.h
+
