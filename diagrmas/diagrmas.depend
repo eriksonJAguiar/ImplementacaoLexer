@@ -1,6 +1,0 @@
-# depslib dependency file v1.0
-1470342339 source:/home/eduardo/Downloads/diagrmas/main.c
-	<stdio.h>
-	<stdlib.h>
-	<pthread.h>
-
