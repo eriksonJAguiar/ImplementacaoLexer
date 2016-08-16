@@ -6,6 +6,7 @@
 int dts[TAM];
 int primeiro;
 int ultimo;
+int tam;
 
 
 int filaVazia(){
@@ -23,12 +24,14 @@ void enfileirar(int t){
 		return;
 	dts[ultimo] = t;
 	ultimo++;
+	tam++;
 }
 void inicializaFila(){
 	primeiro = 0;
 	ultimo = 0;
+	tam = 0;
 	int i = 1;
-	while(i <= TAM){
+	while(i < TAM){
 		enfileirar(i);
 		i++;
 	}
@@ -44,14 +47,9 @@ int desenfileirar() {
 		i++;
 	}
 	ultimo--;
+	tam--;
 	return aux;
 }
-char getThread(){
 
-}
-
-int tamanho(){
-	return ultimo;
-}
 
 

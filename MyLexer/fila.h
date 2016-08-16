@@ -7,7 +7,6 @@
 void inicializaFila();
 void enfileirar(char x);
 int desenfileirar();
-int getThread(int i);
 int filaVazia();
 int filacheia();
 int tamanho();

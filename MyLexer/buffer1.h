@@ -11,7 +11,7 @@ char get1(int i);
 int vazio1();
 int cheio1();
 
-extern char buffer1[4096];
+extern char buffer1[20];
 extern int first1;
 extern int last1;
 

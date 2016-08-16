@@ -8,7 +8,6 @@
 #include "buffer1.h"
 #include "buffer2.h"
 #include "fila.h"
-#define QUANTUM 2
 
 /*strucs*/
 
@@ -65,7 +64,9 @@ char caracter;
 sem_t mutex;
 int contador;
 int terminou;
-
+extern int tam;
+extern int tamBf2;
+int passou;
 
 
 int main() {
@@ -75,9 +76,7 @@ int main() {
 	isToken = 0;
 	aceitou = 0;
 
-	//inicializaFila();
-
-	//iniciaPtr();
+	initializaLista2();
 
 	pthread_t cons, prod;
 
@@ -88,8 +87,11 @@ int main() {
 		pthread_create(&cons, NULL, readFile, NULL);
 		pthread_create(&prod, NULL, consomeBuffer, NULL);
 
+
 		pthread_join(cons, NULL);
 		pthread_join(prod, NULL);
+
+		//sem_wait(&mutex);
 
 		pthread_t t[14];
 		int foundToken = 0;
@@ -104,37 +106,51 @@ int main() {
 
 			int i = 0;
 			aceitou = 0;
+			passou = 0;
+
+			int tamanho = tam;
 
 			while (aceitou != 1 && !(filaVazia())) {
-				if (i == 0 || i >= 14 || isspace(caracter)) {
-					caracter = escandimento(foundToken);
+				if (i == 0 || passou >= tamanho) {
+					caracter = lookahead(foundToken);
+					passou = 0;
 					i = 0;
+					foundToken = 0;
+					tamanho = tam;
+					if(isspace(caracter)){
+						if(caracter == '\n')
+							exibeToken(-1);
+						caracter = lookahead(foundToken);
+					}
 				}
 
-				if (!isspace(caracter)) {
-					t_id = desenfileirar();
+				t_id = desenfileirar();
 					pthread_create(&t[t_id], NULL, seleciona, (void*) (t_id));
 
-					pthread_join(t[t_id], NULL);
+					pthread_join(t[t_id],NULL);
+
 
 					if (isToken > 0)
 						enfileirar(t_id);
-
-					//if(aceitou == 1)
-
-
+					else
+					  pthread_cancel(t[t_id]);
 					i++;
-				}
 
 			}
+			//sem_post(&mutex);
+		if(caracter != '\0')
 
 			exibeToken(isToken);
-			isToken = 0;
-			foundToken = aceitou;
+
+		isToken = 0;
+		foundToken = aceitou;
 
 		} while (caracter != '\0');
 
+		organizaBuffer();
 	}
+
+
 
 	return 0;
 }
@@ -142,49 +158,52 @@ int main() {
 void exibeToken(int token) {
 	switch (token) {
 	case INTEIRO:
-		printf("<INTEIRO>\n");
+		printf("<INTEIRO>");
 		break;
 	case VAR:
-		printf("<VAR>\n");
+		printf("<VAR>");
 		break;
 	case ATT:
-		printf("<ATT>\n");
+		printf("<ATT>");
 		break;
 	case READ:
-		printf("<READ>\n");
+		printf("<READ>");
 		break;
 	case WRITE:
-		printf("<WRITE>\n");
+		printf("<WRITE>");
 		break;
 	case STRING:
-		printf("<STRING>\n");
+		printf("<STRING>");
 		break;
 	case SEP:
-		printf("<SEP>\n");
+		printf("<SEP>");
 		break;
 	case SOMA:
-		printf("<SOMA>\n");
+		printf("<SOMA>");
 		break;
 	case SUB:
-		printf("<SUB>\n");
+		printf("<SUB>");
 		break;
 	case DIV:
-		printf("<DIV>\n");
+		printf("<DIV>");
 		break;
 	case MULT:
-		printf("<MULT>\n");
+		printf("<MULT>");
 		break;
 	case RESTO:
-		printf("<RESTO>\n");
+		printf("<RESTO>");
 		break;
 	case NUM:
-		printf("<NUM>\n");
+		printf("<NUM>");
 		break;
 	case FINAL:
-		printf("<FINAL>\n");
+		printf("<FINAL>");
 		break;
+	case -1:
+			printf("\n");
+			break;
 	default:
-		printf("<ERRO>\n");
+		printf("<ERRO>");
 		break;
 	}
 
@@ -195,9 +214,9 @@ void *readFile() {
 
 	sem_wait(&mutex);
 
-	FILE *f;
+	FILE *f;		aceitou = 1;
 
-	f = fopen("teste.E", "r");
+	f = fopen("file.E", "r");
 
 	if (!f)
 		exit(0);
@@ -207,14 +226,16 @@ void *readFile() {
 		do {
 			inserir1(aux = getc(f));
 			contador++;
-		} while (aux != EOF && contador <= 4096);
+		} while (aux != EOF && contador < 20);
 	} else {
 		int cont = 0;
 		do {
-			if (cont > contador)
+			if (cont >= contador)
 				inserir1(aux = getc(f));
+			else
+				getc(f);
 			cont++;
-		} while (aux != EOF && contador <= (contador + 4096));
+		} while (aux != EOF && cont <= (contador + (20-tamBf2)));
 
 		contador += cont;
 	}
@@ -232,7 +253,7 @@ void *consomeBuffer() {
 
 	int cont = 0;
 	char aux;
-	while (cont <= 4096) {
+	while (cont < 20 && aux != EOF) {
 		aux = remover1();
 		inserir2(aux);
 
@@ -265,7 +286,7 @@ int loop(char a, int x){
 
 	switch (x) {
 	case 1:
-		if ((isxdigit(a) || ispunct(a)) && (a != '(' || a != ')')) {
+		if ((isdigit(a) || isalpha(a) || ispunct(a)) && (a != '(' && a != ')')) {
 			return 1;
 		}
 		break;
@@ -294,47 +315,66 @@ void *seleciona(void *i) {
 	switch (val) {
 	case 1:
 		percorreDt1(caracter);
+		passou++;
 		break;
 	case 2:
 		percorreDt2(caracter);
+		passou++;
 		break;
 	case 3:
 		percorreDt3(caracter);
+		passou++;
 		break;
 	case 4:
 		percorreDt4(caracter);
+		passou++;
 		break;
 	case 5:
 		percorreDt5(caracter);
+		passou++;
 		break;
 	case 6:
 		percorreDt6(caracter);
+		passou++;
 		break;
 	case 7:
 		percorreDt7(caracter);
+		passou++;
 		break;
 	case 8:
 		percorreDt8(caracter);
+		passou++;
 		break;
 	case 9:
 		percorreDt9(caracter);
+		passou++;
 		break;
 	case 10:
 		percorreDt10(caracter);
+		passou++;
 		break;
 	case 11:
 		percorreDt11(caracter);
+		passou++;
 		break;
 	case 12:
 		percorreDt12(caracter);
+		passou++;
 		break;
 	case 13:
 		percorreDt13(caracter);
+		passou++;
 		break;
 	case 14:
 		percorreDt14(caracter);
+		passou++;
 		break;
 	}
+
+	/*if(isspace(caracter)){
+		passou++;
+		caracter = lookahead(0);
+	}*/
 }
 
 void percorreDt1(char a) {
@@ -436,9 +476,15 @@ void percorreDt2(char a) {
 		else
 		  ptr2++;
 	}
-	else if (a == ')' && ptr2 == 9) {
+	if (a == ')' && ptr2 == 9) {
+		isToken = STRING;
+		ptr2++;
+		return;
+	}
+	else if(ptr2 == 10){
 		isToken = STRING;
 		aceitou = 1;
+		ptr2++;
 		return;
 	}
 
@@ -477,23 +523,28 @@ void percorreDt3(char a){
 		}else
 			ptr3++;
 
-	}else if(a == ',' && ptr3 == 7){
+	}if(a == ',' && ptr3 == 7){
 		isToken = RESTO;
 		ptr3++;
 		return;
 
 	}else if (ptr3 == 8) {
-		if(loop(a,3)){
+		if(loop(a,4)){
 			isToken = RESTO;
 			return;
 		}else
 			ptr3++;
 
-	}else if(a == ')' && ptr3 == 8){
+	}if(a == ')' && ptr3 == 9){
 		isToken = RESTO;
-		aceitou = 1;
+		ptr3++;
 		return;
 
+	}else if(ptr3 == 10){
+		isToken = RESTO;
+		aceitou = 1;
+		ptr3++;
+		return;
 	}
 
 	isToken = 0;
@@ -527,7 +578,7 @@ void percorreDt4(char a) {
 		else
 			ptr4++;
 	}
-	if ((ispunct(a) || isspace(a)) && ptr4 == 4) {
+	if ((ispunct(a) || isspace(a)) && (ptr4 == 1 || ptr4 == 4 || ptr4 == 2) && caracter != '(' ) {
 		isToken = VAR;
 		aceitou = 1;
 		return;
@@ -571,6 +622,10 @@ void percorreDt6(char a){
 		return;
 	}else if(a == '>' && ptr6 == 2){
 		isToken = WRITE;
+		ptr6++;
+		return;
+	}else if(ptr6 == 1){
+		isToken = WRITE;
 		aceitou = 1;
 		ptr6++;
 		return;
@@ -591,6 +646,10 @@ void percorreDt7(char a){
 		return;
 	}else if(a == '<' && ptr7 == 2){
 		isToken = READ;
+		ptr7++;
+		return;
+	}else if(ptr7 == 1){
+		isToken = READ;
 		aceitou = 1;
 		ptr7++;
 		return;
@@ -607,6 +666,10 @@ void percorreDt8(char a){
 
 	}else if(a == '-' && ptr8 == 1){
 		isToken = ATT;
+		ptr8++;
+		return;
+	}else if(ptr8 == 1){
+		isToken = ATT;
 		aceitou = 1;
 		ptr8++;
 		return;
@@ -620,9 +683,15 @@ void percorreDt9(char a){
 
 	if(a == '+' && ptr9 == 0){
 		isToken = SOMA;
+		ptr9++;
+		return;
+	}
+	else if(ptr9 == 1){
+		isToken = SOMA;
 		aceitou = 1;
 		ptr9++;
 		return;
+
 	}
 
 	isToken = 0;
@@ -632,10 +701,16 @@ void percorreDt10(char a){
 
 	if(a == '-' && ptr10 == 0){
 		isToken = SUB;
-		aceitou = 1;
 		ptr10++;
 		return;
 	}
+	else if(isspace(a) && ptr10 == 1){
+			isToken = SUB;
+			aceitou = 1;
+			ptr10++;
+			return;
+
+		}
 
 	isToken = 0;
 	aceitou = 0;
@@ -643,6 +718,10 @@ void percorreDt10(char a){
 void percorreDt11(char a){
 
 	if(a == '*' && ptr11 == 0){
+		isToken = MULT;
+		ptr11++;
+		return;
+	}else if(ptr11 == 1){
 		isToken = MULT;
 		aceitou = 1;
 		ptr11++;
@@ -656,6 +735,10 @@ void percorreDt12(char a){
 
 	if(a == '/' && ptr12 == 0){
 		isToken = DIV;
+		ptr12++;
+		return;
+	}else if(ptr12 == 1){
+		isToken = DIV;
 		aceitou = 1;
 		ptr12++;
 		return;
@@ -667,10 +750,15 @@ void percorreDt12(char a){
 void percorreDt13(char a){
 	if(a == ',' && ptr13 == 0){
 		isToken = SEP;
-		aceitou = 1;
 		ptr13++;
 		return;
 	}
+	else if(ptr13 == 1){
+			isToken = SEP;
+			aceitou = 1;
+			ptr13++;
+			return;
+		}
 
 	isToken = 0;
 	aceitou = 0;
@@ -678,6 +766,11 @@ void percorreDt13(char a){
 void percorreDt14(char a){
 
 	if(a == ';' && ptr14 == 0){
+		isToken = FINAL;
+		ptr14++;
+		return;
+	}
+	else if(ptr14 == 1){
 		isToken = FINAL;
 		aceitou = 1;
 		ptr14++;
