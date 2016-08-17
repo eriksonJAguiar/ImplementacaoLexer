@@ -93,6 +93,8 @@ int main() {
 
 		//sem_wait(&mutex);
 
+		initializa2();
+
 		pthread_t t[14];
 		int foundToken = 0;
 
@@ -101,16 +103,22 @@ int main() {
 			inicializaFila();
 			iniciaPtr();
 
+
 			int t_id = 0;
 			int cont = 0;
 
 			int i = 0;
 			aceitou = 0;
 			passou = 0;
+			int space = 0;
 
 			int tamanho = tam;
 
 			while (aceitou != 1 && !(filaVazia())) {
+				/*if (caracter == '\n' && space > 0) {
+					exibeToken(-1);
+					caracter = lookahead(foundToken);
+				}*/
 				if (i == 0 || passou >= tamanho) {
 					caracter = lookahead(foundToken);
 					passou = 0;
@@ -118,10 +126,11 @@ int main() {
 					foundToken = 0;
 					tamanho = tam;
 					if(isspace(caracter)){
-						if(caracter == '\n')
-							exibeToken(-1);
-						caracter = lookahead(foundToken);
+						if(space > 0)
+							caracter = lookahead(foundToken);
+						space++;
 					}
+
 				}
 
 				t_id = desenfileirar();
@@ -139,8 +148,11 @@ int main() {
 			}
 			//sem_post(&mutex);
 		if(caracter != '\0')
-
 			exibeToken(isToken);
+
+		if(isspace(caracter)){
+			caracter = lookahead(0);
+		}
 
 		isToken = 0;
 		foundToken = aceitou;
@@ -158,52 +170,52 @@ int main() {
 void exibeToken(int token) {
 	switch (token) {
 	case INTEIRO:
-		printf("<INTEIRO>");
+		printf("<INTEIRO>\n");
 		break;
 	case VAR:
-		printf("<VAR>");
+		printf("<VAR>\n");
 		break;
 	case ATT:
-		printf("<ATT>");
+		printf("<ATT>\n");
 		break;
 	case READ:
-		printf("<READ>");
+		printf("<READ>\n");
 		break;
 	case WRITE:
-		printf("<WRITE>");
+		printf("<WRITE>\n");
 		break;
 	case STRING:
-		printf("<STRING>");
+		printf("<STRING>\n");
 		break;
 	case SEP:
-		printf("<SEP>");
+		printf("<SEP>\n");
 		break;
 	case SOMA:
-		printf("<SOMA>");
+		printf("<SOMA>\n");
 		break;
 	case SUB:
-		printf("<SUB>");
+		printf("<SUB>\n");
 		break;
 	case DIV:
-		printf("<DIV>");
+		printf("<DIV>\n");
 		break;
 	case MULT:
-		printf("<MULT>");
+		printf("<MULT>\n");
 		break;
 	case RESTO:
-		printf("<RESTO>");
+		printf("<RESTO>\n");
 		break;
 	case NUM:
-		printf("<NUM>");
+		printf("<NUM>\n");
 		break;
 	case FINAL:
-		printf("<FINAL>");
+		printf("<FINAL>\n");
 		break;
 	case -1:
 			printf("\n");
 			break;
 	default:
-		printf("<ERRO>");
+		printf("<ERRO>\n");
 		break;
 	}
 
@@ -624,7 +636,7 @@ void percorreDt6(char a){
 		isToken = WRITE;
 		ptr6++;
 		return;
-	}else if(ptr6 == 1){
+	}else if(ptr6 == 3){
 		isToken = WRITE;
 		aceitou = 1;
 		ptr6++;
@@ -648,7 +660,7 @@ void percorreDt7(char a){
 		isToken = READ;
 		ptr7++;
 		return;
-	}else if(ptr7 == 1){
+	}else if(ptr7 == 3){
 		isToken = READ;
 		aceitou = 1;
 		ptr7++;
@@ -668,7 +680,7 @@ void percorreDt8(char a){
 		isToken = ATT;
 		ptr8++;
 		return;
-	}else if(ptr8 == 1){
+	}else if(ptr8 == 2){
 		isToken = ATT;
 		aceitou = 1;
 		ptr8++;
