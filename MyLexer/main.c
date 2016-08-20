@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <ctype.h>
 #include "buffer1.h"
 #include "buffer2.h"
@@ -62,6 +63,8 @@ int isToken;
 /*variaveis*/
 char caracter;
 sem_t mutex;
+pthread_mutex_t mutex2;
+pthread_cond_t cond;
 int contador;
 int terminou;
 extern int tam;
@@ -70,6 +73,7 @@ int passou;
 
 
 int main() {
+
 
 	contador = 0;
 	terminou = 0;
@@ -82,16 +86,17 @@ int main() {
 
 	sem_init(&mutex, 0, 1);
 
+
 	while (terminou != 1) {
 
 		pthread_create(&cons, NULL, readFile, NULL);
 		pthread_create(&prod, NULL, consomeBuffer, NULL);
 
 
-		pthread_join(cons, NULL);
-		pthread_join(prod, NULL);
+		pthread_join(prod,NULL);
+		pthread_join(cons,NULL);
 
-		//sem_wait(&mutex);
+
 
 		initializa2();
 
@@ -114,11 +119,13 @@ int main() {
 
 			int tamanho = tam;
 
+			if(isspace(caracter)){
+				 	caracter = lookahead(0);
+				}
+
+
 			while (aceitou != 1 && !(filaVazia())) {
-				/*if (caracter == '\n' && space > 0) {
-					exibeToken(-1);
-					caracter = lookahead(foundToken);
-				}*/
+
 				if (i == 0 || passou >= tamanho) {
 					caracter = lookahead(foundToken);
 					passou = 0;
@@ -136,37 +143,36 @@ int main() {
 				t_id = desenfileirar();
 					pthread_create(&t[t_id], NULL, seleciona, (void*) (t_id));
 
-					pthread_join(t[t_id],NULL);
 
+
+					pthread_join(t[t_id],NULL);
 
 					if (isToken > 0)
 						enfileirar(t_id);
 					else
 					  pthread_cancel(t[t_id]);
+
 					i++;
 
+
+
 			}
-			//sem_post(&mutex);
 		if(caracter != '\0')
 			exibeToken(isToken);
 
-		if(isspace(caracter)){
-			caracter = lookahead(0);
-		}
 
 		isToken = 0;
 		foundToken = aceitou;
 
 		} while (caracter != '\0');
 
+
 		organizaBuffer();
 	}
 
 
-
 	return 0;
 }
-
 void exibeToken(int token) {
 	switch (token) {
 	case INTEIRO:
@@ -211,9 +217,6 @@ void exibeToken(int token) {
 	case FINAL:
 		printf("<FINAL>\n");
 		break;
-	case -1:
-			printf("\n");
-			break;
 	default:
 		printf("<ERRO>\n");
 		break;
@@ -226,7 +229,7 @@ void *readFile() {
 
 	sem_wait(&mutex);
 
-	FILE *f;		aceitou = 1;
+	FILE *f;
 
 	f = fopen("file.E", "r");
 
@@ -236,20 +239,26 @@ void *readFile() {
 	char aux;
 	if (contador == 0) {
 		do {
-			inserir1(aux = getc(f));
+			inserir1(aux = (char)getc(f));
 			contador++;
 		} while (aux != EOF && contador < 20);
 	} else {
 		int cont = 0;
-		do {
-			if (cont >= contador)
-				inserir1(aux = getc(f));
-			else
-				getc(f);
-			cont++;
-		} while (aux != EOF && cont <= (contador + (20-tamBf2)));
+		while (aux != EOF && cont < (contador + (20-tamBf2))){
 
-		contador += cont;
+			aux = (char)getc(f);
+
+			if (cont >= contador){
+				inserir1(aux);
+			}
+
+			cont++;
+
+		}
+
+		int valFinal = cont - contador;
+
+		contador += valFinal;
 	}
 	if (aux == EOF)
 		terminou = 1;
