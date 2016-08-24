@@ -65,6 +65,7 @@ char caracter;
 sem_t mutex;
 pthread_mutex_t mutex2;
 pthread_cond_t cond;
+pthread_cond_t cond2;
 int contador;
 int terminou;
 extern int tam;
@@ -86,11 +87,18 @@ int main() {
 
 	sem_init(&mutex, 0, 1);
 
+	pthread_mutex_init(&mutex2,NULL);
+	/*pthread_cond_init(&cond,NULL);
+	pthread_cond_init(&cond2,NULL);*/
+
 
 	while (terminou != 1) {
 
+
 		pthread_create(&cons, NULL, readFile, NULL);
+
 		pthread_create(&prod, NULL, consomeBuffer, NULL);
+
 
 
 		pthread_join(prod,NULL);
@@ -100,76 +108,80 @@ int main() {
 
 		initializa2();
 
-		pthread_t t[14];
-		int foundToken = 0;
+		pthread_mutex_lock(&mutex2);
 
-		do {
+			pthread_t t[14];
+					int foundToken = 0;
 
-			inicializaFila();
-			iniciaPtr();
+					do {
 
-
-			int t_id = 0;
-			int cont = 0;
-
-			int i = 0;
-			aceitou = 0;
-			passou = 0;
-			int space = 0;
-
-			int tamanho = tam;
-
-			if(isspace(caracter)){
-				 	caracter = lookahead(0);
-				}
+						inicializaFila();
+						iniciaPtr();
 
 
-			while (aceitou != 1 && !(filaVazia())) {
+						int t_id = 0;
+						int cont = 0;
 
-				if (i == 0 || passou >= tamanho) {
-					caracter = lookahead(foundToken);
-					passou = 0;
-					i = 0;
-					foundToken = 0;
-					tamanho = tam;
-					if(isspace(caracter)){
-						if(space > 0)
-							caracter = lookahead(foundToken);
-						space++;
-					}
+						int i = 0;
+						aceitou = 0;
+						passou = 0;
+						int space = 0;
 
-				}
+						int tamanho = tam;
 
-				t_id = desenfileirar();
-					pthread_create(&t[t_id], NULL, seleciona, (void*) (t_id));
+						/*if(isspace(caracter)){
+							 	caracter = escandimento(0);
+							}*/
+
+						while (aceitou != 1 && !(filaVazia())) {
+
+							if (i == 0 || passou >= tamanho) {
+								caracter = escandimento(foundToken);
+								passou = 0;
+								i = 0;
+								foundToken = 0;
+								tamanho = tam;
+							}
+
+								t_id = desenfileirar();
+								pthread_create(&t[t_id], NULL, seleciona, (void*) (t_id));
 
 
 
-					pthread_join(t[t_id],NULL);
+								pthread_join(t[t_id],NULL);
 
-					if (isToken > 0)
-						enfileirar(t_id);
-					else
-					  pthread_cancel(t[t_id]);
+								if (isToken > 0)
+									enfileirar(t_id);
+								else
+								  pthread_cancel(t[t_id]);
 
-					i++;
-
-
-
-			}
-		if(caracter != '\0')
-			exibeToken(isToken);
+								i++;
 
 
-		isToken = 0;
-		foundToken = aceitou;
 
-		} while (caracter != '\0');
+						}
+					if(caracter != '\0')
+						exibeToken(isToken);
 
+
+					isToken = 0;
+					foundToken = aceitou;
+
+					} while (caracter != '\0' && caracter != EOF);
+
+					pthread_mutex_unlock(&mutex2);
+
+
+		//sem_post(&mutex);
 
 		organizaBuffer();
 	}
 
+
+	pthread_exit(&prod);
+	pthread_exit(&cons);
+
+	sem_destroy(&mutex);
 
 	return 0;
 }
@@ -227,6 +239,7 @@ void exibeToken(int token) {
 /*leitura do arquivo*/
 void *readFile() {
 
+
 	sem_wait(&mutex);
 
 	FILE *f;
@@ -282,6 +295,7 @@ void *consomeBuffer() {
 	}
 
 	sem_post(&mutex);
+
 }
 
 /*automatos*/
@@ -392,10 +406,10 @@ void *seleciona(void *i) {
 		break;
 	}
 
-	/*if(isspace(caracter)){
+	if(isspace(caracter)){
 		passou++;
-		caracter = lookahead(0);
-	}*/
+		caracter = escandimento(0);
+	}
 }
 
 void percorreDt1(char a) {
@@ -586,7 +600,7 @@ void percorreDt4(char a) {
 		else
 		 ptr4++;
 	}
-	else if (a == '_' && ptr4 == 2) {
+	if (a == '_' && ptr4 == 2) {
 		isToken = VAR;
 		ptr3++;
 		return;
@@ -599,7 +613,7 @@ void percorreDt4(char a) {
 		else
 			ptr4++;
 	}
-	if ((ispunct(a) || isspace(a)) && (ptr4 == 1 || ptr4 == 4 || ptr4 == 2) && caracter != '(' ) {
+	if (/*(ispunct(a) || isspace(a)) &&*/ (ptr4 == 1 || ptr4 == 4 || ptr4 == 2) && caracter != '(' ) {
 		isToken = VAR;
 		aceitou = 1;
 		return;
@@ -622,7 +636,7 @@ void percorreDt5(char a){
 			ptr5++;
 
 	}
-	if ((ispunct(a) || isspace(a) || isalpha(a)) && ptr5 == 2){
+	if ((ispunct(a) /*|| isspace(a)*/ || isalpha(a)) && ptr5 == 2){
 		isToken = NUM;
 		aceitou = 1;
 		return;

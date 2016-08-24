@@ -58,7 +58,7 @@ char get2(int i){
       return '\0';
     return buffer2[i];
 }
-char lookahead(int foundToken){
+char escandimento(int foundToken){
   char aux;
 	if(foundToken == 1){
 	  forwd--;
